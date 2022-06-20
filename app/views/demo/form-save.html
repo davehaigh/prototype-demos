@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block pageTitle %} 
+Page title here
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* call to action boxes */
+.call-to-action {
+    margin: 0 0 1.5em 0;
+    background-color: #dee0e2;
+    padding: 0.5em 0.5em 0.4em;
+}
+@media (max-width: 641px) {
+    .call-to-action {
+        padding: 1.5em 1em;    
+    }
+}
+
+</style>
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+
+        
+
+        <!-- <div class="govuk-panel govuk-panel--confirmation">
+            <div class="govuk-panel__body">
+                All answers saved to your account
+            </div>
+        </div> -->
+
+        <div class="call-to-action">
+            <p class="govuk-body-s" style="margin-bottom: 0">All answers have been saved to your account</p>
+        </div>
+
+        <form method="POST" class="form">
+
+            <!-- RADIOS -->
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset" aria-describedby="radio-hint">
+                    <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                        <h1 class="govuk-fieldset__heading">
+                            Where is the item or service located?
+                        </h1>
+                    </legend>
+                    <div class="govuk-radios" id="radios2Answer">
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="radios2-1" name="radios2Answer" type="radio" value="Yes" >
+                            <label class="govuk-label govuk-radios__label" for="radios2-1">
+                            In the UK
+                            </label>
+                        </div>
+                        <div class="govuk-radios__item">
+                            <input class="govuk-radios__input" id="radios2-2" name="radios2Answer" type="radio" value="No" >
+                            <label class="govuk-label govuk-radios__label" for="radios2-2">
+                            Outside the UK
+                            </label>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <button type="submit" class="govuk-button">
+                Continue
+            </button>
+
+            
+
+            <p class="govuk-body"><a href="#" class="govuk-link govuk-link--no-visited-state">Sign out and continue later</a></p>
+
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}
