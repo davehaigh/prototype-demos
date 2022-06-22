@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% set _inError = myData.validationError == "true"  %}
+
+{% block pageTitle %} 
+{% if _inError %}Error: {% endif %}Which numerical system do you want to use?
+{% endblock %}
+
+{% block beforeContent %}
+    {% include "includes/alpha-banner.html" %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            {% include "includes/back-link.html" %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-two-thirds">
+
+        {% if _inError %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="error-summary">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+            </h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    {% for name, item in myData.validationErrors %}
+                    <li>
+                        <a href="#{{item.anchor}}">{{item.message}}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- <h1 class="govuk-heading-xl" >Do you know your sort code?</h1> -->
+
+        <form method="POST">
+
+            <div class="govuk-form-group {% if _inError %}govuk-form-group--error{% endif %}">
+
+                <h1 class="govuk-label-wrapper">
+                    <label class="govuk-label govuk-label--xl" for="sortCodeSystem">
+                        Which numerical system do you want to use?
+                    </label>
+                </h1>
+
+                {% if _inError %}
+                <p class="govuk-error-message">
+                    <span class="govuk-visually-hidden">Error:</span>
+                    {{myData.validationErrors.sortCodeSystem.message}}
+                </p>
+                {% endif %}
+
+                <select class="govuk-select {% if _inError %}govuk-input--error{% endif %}" id="sortCodeSystem" name="sortCodeSystem" {% if _inError %}aria-describedby="sortCodeKnow-error"{% endif %}>
+                    <option disabled selected value> -- select an option -- </option>
+                    {% for _system in myData.numeralSystems %}
+                    <option value="{{_system.type}}" {% if myData.sortCodeSystem == _system.type %}selected{% endif %} >{{_system.description}}</option>
+                    {% endfor %}
+                </select>
+
+            </div>
+
+            {{govukButton({
+                text: "Continue"
+            })}}
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block pageScripts %}
+<script>
+
+
+</script>
+{% endblock pageScripts %}
