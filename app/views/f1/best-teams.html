@@ -1,0 +1,162 @@
+{% extends "layout_unbranded.html" %}
+
+{% set serviceName = "GridRival" %}
+
+{% set _inError = myData.validationError == "true"  %}
+
+{% block pageTitle %} 
+{% if _inError %}Error: {% endif %}
+{% endblock %}
+
+{% block beforeContent %}
+
+    <!-- <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            {% include "includes/back-link.html" %}
+        </div>
+    </div> -->
+{% endblock %}
+
+{% block content %}
+
+
+
+<div class="govuk-grid-row">
+
+    <div class="govuk-grid-column-one-third">
+
+
+        <form method="POST" novalidate>
+
+            {{govukButton({
+                text: "Calculate best teams"
+            })}}
+
+            <div class="govuk-form-group">
+                <h1 class="govuk-label-wrapper">
+                  <label class="govuk-label govuk-label--s" for="budget">
+                    Total budget (including constructor)
+                  </label>
+                </h1>
+                <div class="govuk-input__wrapper">
+                    <div class="govuk-input__prefix" aria-hidden="true">£</div>
+                    <input class="govuk-input govuk-input--width-5 " id="budget" name="budget" type="text" spellcheck="false" value="{{myData.f1BudgetWithConstructor}}">
+                    <div class="govuk-input__suffix" aria-hidden="true">M</div>
+                </div>
+            </div>
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                    <h1 class="govuk-fieldset__heading">
+                    Drivers available
+                    </h1>
+                </legend>
+                <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
+
+                    {% for _driver in myData.drivers %}
+                    <div class="govuk-checkboxes__item">
+                        <input class="govuk-checkboxes__input" id="driver-{{_driver.name}}" name="drivers" type="checkbox" value="{{_driver.name}}" {% if _driver.available %}checked{% endif %}>
+                        <label class="govuk-label govuk-checkboxes__label" for="driver-{{_driver.name}}"  >
+                            {{_driver.name}} ({{_driver.points}}, £{{_driver.price}}M)
+                        </label>
+                    </div>
+                    {% endfor %}
+                    
+                </div>
+                </fieldset>
+            </div>
+
+        </form>
+
+
+    </div>
+
+	<div class="govuk-grid-column-two-thirds">
+
+        {% if _inError %}
+        <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="error-summary">
+            <h2 class="govuk-error-summary__title" id="error-summary-title">
+                There is a problem
+            </h2>
+            <div class="govuk-error-summary__body">
+                <ul class="govuk-list govuk-error-summary__list">
+                    {% for name, item in myData.validationErrors %}
+                    <li>
+                        <a href="#{{item.anchor}}">{{item.message}}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <h1 class="govuk-heading-xl" >Best teams available</h1>
+
+        <!-- <p class="govuk-body">
+            Total drivers available: {{myData.driversAvailable|length}}<br>
+            Total budget: £{{myData.f1BudgetWithConstructor}} million
+        </p> -->
+
+        <!-- <p class="govuk-body">
+            {{myData.driversCombinationsArray.length}} teams possible
+        </p> -->
+
+        <!-- <p>{{myData.driversCombinations|dump}}</p> -->
+
+        {% for _constructor in myData.teams %}
+
+        <h1 class="govuk-heading-l govuk-!-margin-bottom-2">
+            {{_constructor.constructor.constructor}}
+        </h1>
+        <p class="govuk-body">Constructor cost: £{{_constructor.constructor.price}}M</p>
+        <!-- <p class="govuk-body">
+            {{_constructor.combos|length}} teams in budget
+        </p> -->
+
+        {% set _countToShow = 3 %}
+        <!-- <p class="govuk-body">
+            Showing top {{_countToShow}}
+        </p> -->
+        <table class="govuk-table">
+            <thead class="govuk-table__head">
+              <tr class="govuk-table__row">
+                <th scope="col" class="govuk-table__header"></th>
+                <th scope="col" class="govuk-table__header">Driver points</th>
+                <th scope="col" class="govuk-table__header">Team points</th>
+              </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+
+            {% for _team in _constructor.combos %}
+            {% if loop.index < _countToShow+1 %}
+              <tr class="govuk-table__row">
+                <th scope="row" class="govuk-table__header">
+                    {% for _driver in _team.drivers %}
+                        {{_driver}}, 
+                    {% endfor %}
+                </th>
+                <td class="govuk-table__cell">{{_team.totalPoints}}</td>
+                <td class="govuk-table__cell">{{_team.totalPoints + _constructor.constructor.points}}</td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+
+            </tbody>
+          </table>
+
+          {% endfor %}
+       
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block pageScripts %}
+<script>
+
+
+</script>
+{% endblock pageScripts %}

@@ -7,6 +7,7 @@ const router = express.Router()
 var _myData = {}
 
 require('./routes/sort-code/routes.js')(router,JSON.parse(JSON.stringify(_myData)));
+require('./routes/f1/routes.js')(router,JSON.parse(JSON.stringify(_myData)));
 
 
 module.exports = router
