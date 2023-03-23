@@ -67,6 +67,8 @@
                 </fieldset>
             </div>
 
+            <img src="/public/images/vince-mcmahon-walk.gif" class="" >
+
         </form>
 
 
@@ -91,9 +93,16 @@
         </div>
         {% endif %}
 
-        <h1 class="govuk-heading-xl" >
-            Best teams available
-        </h1>
+        <!-- <h1 class="govuk-heading-xl" >
+            Summary
+        </h1> -->
+
+        <h2 class="govuk-heading-m">Summary (high to low)</h2>
+        <ol class="govuk-list govuk-list--number">
+        {% for _highestSummary in myData.highestPoints %}
+            <li>{{_highestSummary.constructor}} - {{_highestSummary.points}}</li>
+        {% endfor %}
+        </ol>   
 
         <!-- <p class="govuk-body">
             Total drivers available: {{myData.driversAvailable|length}}<br>
@@ -106,11 +115,12 @@
 
         <!-- <p>{{myData.driversCombinations|dump}}</p> -->
 
+        <!-- <h1 class="govuk-heading-xl">Detailed breakdown</h1> -->
         {% for _constructor in myData.teams %}
 
-        <h1 class="govuk-heading-l govuk-!-margin-bottom-2">
+        <h2 class="govuk-heading-l govuk-!-margin-bottom-2">
             {{_constructor.constructor.constructor}}
-        </h1>
+        </h2>
         <p class="govuk-body">Constructor cost: £{{_constructor.constructor.price}}M</p>
         <!-- <p class="govuk-body">
             {{_constructor.combos|length}} teams in budget
@@ -123,23 +133,27 @@
         <table class="govuk-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header"></th>
-                <th scope="col" class="govuk-table__header">Driver points</th>
-                <th scope="col" class="govuk-table__header">Team points</th>
+                <th scope="col" class="govuk-table__header">Best teams available (top 3)</th>
+                <th scope="col" class="govuk-table__header">Drivers</th>
+                <th scope="col" class="govuk-table__header">Team</th>
               </tr>
             </thead>
             <tbody class="govuk-table__body">
 
             {% for _team in _constructor.combos %}
             {% if loop.index < _countToShow+1 %}
-              <tr class="govuk-table__row">
+              <tr class="govuk-table__row" {% if loop.index == 1 %}style="background:#ffdd00"{% endif %} >
                 <th scope="row" class="govuk-table__header">
                     {% for _driver in _team.drivers %}
-                        {{_driver}}, 
+                        {{_driver}}{% if loop.last %}{% else %},{% endif %}
                     {% endfor %}
                 </th>
                 <td class="govuk-table__cell">{{_team.totalPoints}}</td>
-                <td class="govuk-table__cell">{{_team.totalPoints + _constructor.constructor.points}}</td>
+                <td class="govuk-table__cell">
+                    {% if loop.index == 1 %}<strong>{% endif %}
+                    {{_team.totalPoints + _constructor.constructor.points}}
+                    {% if loop.index == 1 %}</strong>{% endif %}
+                </td>
               </tr>
               {% endif %}
             {% endfor %}

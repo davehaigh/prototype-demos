@@ -163,6 +163,8 @@ function combinations(set) {
 
 function calculateBestTeam(req){
 
+    req.session.myData.highestPoints = []
+
     req.session.myData.driversAvailable = []
     for (var e = 0; e < req.session.myData.drivers.length; e++) {
         if(req.session.myData.drivers[e].available){
@@ -214,6 +216,18 @@ function calculateBestTeam(req){
             }
             req.session.myData.driversCombinationsInBudget.sort(function(a,b){
                 var returnValue = a.totalPoints < b.totalPoints ? 1 : b.totalPoints < a.totalPoints ? -1 : 0;
+                return returnValue;
+            })
+
+
+            //Highest points summary
+            var _highestPoints = {
+                "constructor": _constructor.constructor,
+                "points": req.session.myData.driversCombinationsInBudget[0].totalPoints + _constructor.points
+            }
+            req.session.myData.highestPoints.push(_highestPoints)
+            req.session.myData.highestPoints.sort(function(a,b){
+                var returnValue = a.points < b.points ? 1 : b.points < a.points ? -1 : 0;
                 return returnValue;
             })
 
