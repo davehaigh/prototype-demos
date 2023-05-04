@@ -49,6 +49,26 @@
                 <fieldset class="govuk-fieldset">
                 <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
                     <h1 class="govuk-fieldset__heading">
+                    Star driver
+                    </h1>
+                </legend>
+                <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
+
+                    <div class="govuk-checkboxes__item">
+                        <input class="govuk-checkboxes__input" id="starDriver" name="starDriver" type="checkbox" value="true" {% if myData.starDriver %}checked{% endif %}>
+                        <label class="govuk-label govuk-checkboxes__label" for="starDriver"  >
+                            Consider star driver
+                        </label>
+                    </div>
+                    
+                </div>
+                </fieldset>
+            </div>
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                    <h1 class="govuk-fieldset__heading">
                     Drivers available
                     </h1>
                 </legend>
@@ -58,6 +78,28 @@
                     <div class="govuk-checkboxes__item">
                         <input class="govuk-checkboxes__input" id="driver-{{_driver.name}}" name="drivers" type="checkbox" value="{{_driver.name}}" {% if _driver.available %}checked{% endif %}>
                         <label class="govuk-label govuk-checkboxes__label" for="driver-{{_driver.name}}"  >
+                            {{_driver.name}} ({{_driver.points}}, £{{_driver.price}}M)
+                        </label>
+                    </div>
+                    {% endfor %}
+                    
+                </div>
+                </fieldset>
+            </div>
+
+            <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
+                    <h1 class="govuk-fieldset__heading">
+                    Have to have drivers
+                    </h1>
+                </legend>
+                <div class="govuk-checkboxes govuk-checkboxes--small" data-module="govuk-checkboxes">
+
+                    {% for _driver in myData.drivers %}
+                    <div class="govuk-checkboxes__item">
+                        <input class="govuk-checkboxes__input" id="havetohave-{{_driver.name}}" name="haveToHaveDrivers" type="checkbox" value="{{_driver.name}}" {% if _driver.haveToHave %}checked{% endif %}>
+                        <label class="govuk-label govuk-checkboxes__label" for="havetohave-{{_driver.name}}"  >
                             {{_driver.name}} ({{_driver.points}}, £{{_driver.price}}M)
                         </label>
                     </div>
@@ -100,7 +142,7 @@
         <h2 class="govuk-heading-m">Summary (high to low)</h2>
         <ol class="govuk-list govuk-list--number">
         {% for _highestSummary in myData.highestPoints %}
-            <li>{{_highestSummary.constructor}} - {{_highestSummary.points}}</li>
+            <li><a href="#{{_highestSummary.constructor}}" class="govuk-link govuk-link--no-visited-state">{{_highestSummary.constructor}}</a> - {{_highestSummary.points}}</li>
         {% endfor %}
         </ol>   
 
@@ -118,7 +160,7 @@
         <!-- <h1 class="govuk-heading-xl">Detailed breakdown</h1> -->
         {% for _constructor in myData.teams %}
 
-        <h2 class="govuk-heading-l govuk-!-margin-bottom-2">
+        <h2 class="govuk-heading-l govuk-!-margin-bottom-2" id="{{_constructor.constructor.constructor}}">
             {{_constructor.constructor.constructor}}
         </h2>
         <p class="govuk-body">Constructor cost: £{{_constructor.constructor.price}}M</p>
@@ -126,14 +168,14 @@
             {{_constructor.combos|length}} teams in budget
         </p> -->
 
-        {% set _countToShow = 3 %}
+        {% set _countToShow = 10 %}
         <!-- <p class="govuk-body">
             Showing top {{_countToShow}}
         </p> -->
         <table class="govuk-table">
             <thead class="govuk-table__head">
               <tr class="govuk-table__row">
-                <th scope="col" class="govuk-table__header">Best teams available (top 3)</th>
+                <th scope="col" class="govuk-table__header">Best teams available (top {{_countToShow}})</th>
                 <th scope="col" class="govuk-table__header">Drivers</th>
                 <th scope="col" class="govuk-table__header">Team</th>
               </tr>
@@ -143,15 +185,17 @@
             {% for _team in _constructor.combos %}
             {% if loop.index < _countToShow+1 %}
               <tr class="govuk-table__row" {% if loop.index == 1 %}style="background:#ffdd00"{% endif %} >
-                <th scope="row" class="govuk-table__header">
+                <td class="govuk-table__cell">
+                    {% if loop.index == 1 %}<strong>{% endif %}
                     {% for _driver in _team.drivers %}
-                        {{_driver}}{% if loop.last %}{% else %},{% endif %}
+                        {{_driver}}{% if myData.starDriver and (_driver == _team.starDriver.name) %}<span style="font-size:0.6em; top: -7px; position: relative;">&starf;</span>{% endif %}{% if loop.last %}{% else %},{% endif %}
                     {% endfor %}
-                </th>
+                    {% if loop.index == 1 %}</strong>{% endif %}
+                </td>
                 <td class="govuk-table__cell">{{_team.totalPoints}}</td>
                 <td class="govuk-table__cell">
                     {% if loop.index == 1 %}<strong>{% endif %}
-                    {{_team.totalPoints + _constructor.constructor.points}}
+                    {{_team.totalPointsWithConstructor}}
                     {% if loop.index == 1 %}</strong>{% endif %}
                 </td>
               </tr>

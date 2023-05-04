@@ -184,7 +184,7 @@ function calculateBestTeam(req){
             var _budget = req.session.myData.f1BudgetWithConstructor - _constructorPrice
             var _newTeam = {
                 "constructor": _constructor,
-                "combos": [],
+                "combos": []
             }
            
 
@@ -198,7 +198,12 @@ function calculateBestTeam(req){
                     "drivers": [],
                     "totalPrice": 0,
                     "totalPoints": 0,
-                    "inBudget": false
+                    "totalPointsWithConstructor": 0,
+                    "inBudget": false,
+                    "starDriver": {
+                      "name": "",
+                      "points": 0
+                    }
                 }
                 //For each driver in combo
                 // {"name":"Leclerc","points":150,"price":25.7}
@@ -207,13 +212,57 @@ function calculateBestTeam(req){
                     _newCombo.drivers.push(_driver.name)
                     _newCombo.totalPrice = _newCombo.totalPrice + _driver.price
                     _newCombo.totalPoints = _newCombo.totalPoints + _driver.points
+                    //Set star driver
+                    if(req.session.myData.starDriver && _driver.price < 18){
+                      if(_newCombo.starDriver.points == 0 || (_newCombo.starDriver.points < _driver.points)){
+                        _newCombo.starDriver.name = _driver.name
+                        _newCombo.starDriver.points = _driver.points
+                      }
+                    }
                 }
+                //add on star driver points
+                _newCombo.totalPoints = _newCombo.totalPoints + _newCombo.starDriver.points
+
+                //Add constructor points
+                _newCombo.totalPointsWithConstructor = Math.round((_newCombo.totalPoints + _constructor.points) * 1) / 1
+
+                //Round total driver points
+                _newCombo.totalPoints = Math.round(_newCombo.totalPoints * 1) / 1
+
+                //If combo is in budget add to list
                 _newCombo.totalPrice = Math.round(_newCombo.totalPrice * 10) / 10
                 _newCombo.inBudget = _newCombo.totalPrice <= _budget
-                if(_newCombo.inBudget){
+
+
+                //IF combo contains all the have to have drivers then add to list
+                _newCombo.hasAllHaveToHaveDrivers = false
+                var _haveToMatchLength = req.session.myData.selectedHaveToHaveDrivers.length
+                if(_haveToMatchLength > 0){
+                  var _matched = 0
+                  for (var k = 0; k < _haveToMatchLength; k++) {
+                    var _selectedDriver = req.session.myData.selectedHaveToHaveDrivers[k]
+                    for (var m = 0; m < _newCombo.drivers.length; m++) {
+                        var _driver = _newCombo.drivers[m]
+                        if(_selectedDriver == _driver){
+                          _matched++
+                        }
+                    }
+                  }
+                  if(_matched == _haveToMatchLength){
+                    _newCombo.hasAllHaveToHaveDrivers = true
+                  }
+                } else {
+                  _newCombo.hasAllHaveToHaveDrivers = true
+                }
+
+
+
+                //IF in budget AND combo contains all the have to have drivers then add to list
+                if(_newCombo.inBudget && _newCombo.hasAllHaveToHaveDrivers){
                     req.session.myData.driversCombinationsInBudget.push(_newCombo)
                 }
             }
+            //Sort all combos within contructor by total points
             req.session.myData.driversCombinationsInBudget.sort(function(a,b){
                 var returnValue = a.totalPoints < b.totalPoints ? 1 : b.totalPoints < a.totalPoints ? -1 : 0;
                 return returnValue;
@@ -223,19 +272,21 @@ function calculateBestTeam(req){
             //Highest points summary
             var _highestPoints = {
                 "constructor": _constructor.constructor,
-                "points": req.session.myData.driversCombinationsInBudget[0].totalPoints + _constructor.points
+                "points": Math.round((req.session.myData.driversCombinationsInBudget[0].totalPoints + _constructor.points) * 1) / 1
             }
             req.session.myData.highestPoints.push(_highestPoints)
-            req.session.myData.highestPoints.sort(function(a,b){
-                var returnValue = a.points < b.points ? 1 : b.points < a.points ? -1 : 0;
-                return returnValue;
-            })
 
 
 
             _newTeam.combos = req.session.myData.driversCombinationsInBudget
             req.session.myData.teams.push(_newTeam)
         }
+
+        //Sort summary at top
+        req.session.myData.highestPoints.sort(function(a,b){
+          var returnValue = a.points < b.points ? 1 : b.points < a.points ? -1 : 0;
+          return returnValue;
+        })
 }
 
 module.exports = function (router,_myData) {
@@ -246,181 +297,364 @@ module.exports = function (router,_myData) {
         req.session.myData = JSON.parse(JSON.stringify(_myData))
 
         req.session.myData.drivers = [
-                {
-                  "name": "Verstappen",
-                  "points": 162,
-                  "price": 30.2,
-                  "available": true
-                },
-                {
-                  "name": "Perez",
-                  "points": 157,
-                  "price": 27.8,
-                  "available": true
-                },
-                {
-                  "name": "Leclerc",
-                  "points": 150,
-                  "price": 25.7,
-                  "available": true
-                },
-                {
-                  "name": "Russell",
-                  "points": 147,
-                  "price": 25.1,
-                  "available": true
-                },
-                {
-                  "name": "Sainz",
-                  "points": 144,
-                  "price": 25.7,
-                  "available": true
-                },
-                {
-                  "name": "Hamilton",
-                  "points": 141,
-                  "price": 23.8,
-                  "available": true
-                },
-                {
-                  "name": "Alonso",
-                  "points": 134,
-                  "price": 21.4,
-                  "available": true
-                },
-                {
-                  "name": "Ocon",
-                  "points": 125,
-                  "price": 18.9,
-                  "available": true
-                },
-                {
-                  "name": "Norris",
-                  "points": 121,
-                  "price": 17.6,
-                  "available": true
-                },
-                {
-                  "name": "Gasly",
-                  "points": 119,
-                  "price": 18.5,
-                  "available": true
-                },
-                {
-                  "name": "Stroll",
-                  "points": 117,
-                  "price": 13.2,
-                  "available": true
-                },
-                {
-                  "name": "Tsunoda",
-                  "points": 108,
-                  "price": 12.9,
-                  "available": true
-                },
-                {
-                  "name": "Albon",
-                  "points": 106,
-                  "price": 5.3,
-                  "available": true
-                },
-                {
-                  "name": "Bottas",
-                  "points": 106,
-                  "price": 14.6,
-                  "available": true
-                },
-                {
-                  "name": "Magnussen",
-                  "points": 104,
-                  "price": 13.8,
-                  "available": true
-                },
-                {
-                  "name": "Zhou",
-                  "points": 103,
-                  "price": 7.4,
-                  "available": true
-                },
-                {
-                  "name": "Piastri",
-                  "points": 82,
-                  "price": 13.3,
-                  "available": true
-                },
-                {
-                  "name": "Sargeant",
-                  "points": 28,
-                  "price": 5.9,
-                  "available": true
-                },
-                {
-                  "name": "Hulkenberg",
-                  "points": 27,
-                  "price": 10.3,
-                  "available": true
-                },
-                {
-                  "name": "Vries",
-                  "points": 26,
-                  "price": 8.6,
-                  "available": true
-                }
-        ]
+          {
+            "name": "Verstappen",
+            "race1": 166,
+            "race2": 170,
+            "race3": 169,
+            "race4": 157,
+            "points": 165.5,
+            "points8races": 162,
+            "price": 29.8,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Perez",
+            "race1": 159,
+            "race2": 168,
+            "race3": 157,
+            "race4": 170,
+            "points": 163.5,
+            "points8races": 159,
+            "price": 28.5,
+            "available": true,
+            "haveToHave": true
+          },
+          {
+            "name": "Leclerc",
+            "race1": 98,
+            "race2": 142,
+            "race3": 81,
+            "race4": 167,
+            "points": 122,
+            "points8races": 141,
+            "price": 25.6,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Russell",
+            "race1": 134,
+            "race2": 151,
+            "race3": 100,
+            "race4": 130,
+            "points": 128.75,
+            "points8races": 138,
+            "price": 21.8,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Sainz",
+            "race1": 168,
+            "race2": 143,
+            "race3": 129,
+            "race4": 153,
+            "points": 148.25,
+            "points8races": 144,
+            "price": 24.3,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Hamilton",
+            "race1": 146,
+            "race2": 145,
+            "race3": 176,
+            "race4": 141,
+            "points": 152,
+            "points8races": 146,
+            "price": 25.1,
+            "available": false,
+            "haveToHave": false
+          },
+          {
+            "name": "Alonso",
+            "race1": 172,
+            "race2": 180,
+            "race3": 167,
+            "race4": 157,
+            "points": 169,
+            "points8races": 145,
+            "price": 24.3,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Ocon",
+            "race1": 89,
+            "race2": 135,
+            "race3": 103,
+            "race4": 98,
+            "points": 106.25,
+            "points8races": 118,
+            "price": 15,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Norris",
+            "race1": 96,
+            "race2": 84,
+            "race3": 155,
+            "race4": 132,
+            "points": 116.75,
+            "points8races": 124,
+            "price": 19,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Gasly",
+            "race1": 141,
+            "race2": 123,
+            "race3": 112,
+            "race4": 104,
+            "points": 120,
+            "points8races": 117,
+            "price": 15.6,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Stroll",
+            "race1": 155,
+            "race2": 86,
+            "race3": 169,
+            "race4": 143,
+            "points": 138.25,
+            "points8races": 127,
+            "price": 17.2,
+            "available": true,
+            "haveToHave": true
+          },
+          {
+            "name": "Tsunoda",
+            "race1": 123,
+            "race2": 123,
+            "race3": 130,
+            "race4": 133,
+            "points": 127.25,
+            "points8races": 115,
+            "price": 15.8,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Albon",
+            "race1": 130,
+            "race2": 70,
+            "race3": 82,
+            "race4": 119,
+            "points": 100.25,
+            "points8races": 104,
+            "price": 6.6,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Bottas",
+            "race1": 151,
+            "race2": 85,
+            "race3": 124,
+            "race4": 87,
+            "points": 111.75,
+            "points8races": 107,
+            "price": 12.6,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Magnussen",
+            "race1": 110,
+            "race2": 131,
+            "race3": 88,
+            "race4": 114,
+            "points": 110.75,
+            "points8races": 104,
+            "price": 12,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Zhou",
+            "race1": 93,
+            "race2": 109,
+            "race3": 144,
+            "race4": 72,
+            "points": 104.5,
+            "points8races": 104,
+            "price": 7.7,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Piastri",
+            "race1": 59,
+            "race2": 106,
+            "race3": 144,
+            "race4": 116,
+            "points": 106.25,
+            "points8races": 106,
+            "price": 15,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Sargeant",
+            "race1": 131,
+            "race2": 97,
+            "race3": 95,
+            "race4": 91,
+            "points": 103.5,
+            "points8races": 51,
+            "price": 6.6,
+            "available": false,
+            "haveToHave": false
+          },
+          {
+            "name": "Hulkenberg",
+            "race1": 102,
+            "race2": 115,
+            "race3": 168,
+            "race4": 82,
+            "points": 116.75,
+            "points8races": 58,
+            "price": 10.3,
+            "available": true,
+            "haveToHave": false
+          },
+          {
+            "name": "Vries",
+            "race1": 106,
+            "race2": 105,
+            "race3": 94,
+            "race4": 55,
+            "points": 90,
+            "points8races": 45,
+            "price": 6.1,
+            "available": false,
+            "haveToHave": false
+          }
+         ]
         req.session.myData.constructors = [
-            {
-              "constructor": "Red Bull",
-              "points": 168,
-              "price": 30.0
-            },
-            {
-              "constructor": "Ferrari",
-              "points": 151,
-              "price": 25.5
-            },
-            {
-              "constructor": "Mercedes",
-              "points": 151,
-              "price": 25.1
-            },
-            {
-              "constructor": "Alpine",
-              "points": 119,
-              "price": 20.0
-            },
-            {
-              "constructor": "Aston Martin",
-              "points": 124,
-              "price": 16.8
-            },
-            {
-              "constructor": "Alfa Romeo",
-              "points": 105,
-              "price": 15.2
-            },
-            {
-              "constructor": "McLaren",
-              "points": 116,
-              "price": 13.8
-            },
-            {
-              "constructor": "Hass",
-              "points": 101,
-              "price": 11.2
-            },
-            {
-              "constructor": "AlphaTauri",
-              "points": 103,
-              "price": 9.5
-            },
-            {
-              "constructor": "Williams",
-              "points": 88,
-              "price": 6.9
-            }
-        ]
+          {
+            "constructor": "Red Bull",
+            "race1": 177,
+            "race2": 164,
+            "race3": 153,
+            "race4": 175,
+            "points": 167.25,
+            "points8races": 167,
+            "price": 29.4
+          },
+          {
+            "constructor": "Ferrari",
+            "race1": 133,
+            "race2": 153,
+            "race3": 110,
+            "race4": 165,
+            "points": 140.25,
+            "points8races": 147,
+            "price": 23.6
+          },
+          {
+            "constructor": "Mercedes",
+            "race1": 149,
+            "race2": 156,
+            "race3": 141,
+            "race4": 142,
+            "points": 147,
+            "points8races": 152,
+            "price": 24.2
+          },
+          {
+            "constructor": "Alpine",
+            "race1": 103,
+            "race2": 135,
+            "race3": 112,
+            "race4": 97,
+            "points": 111.75,
+            "points8races": 115,
+            "price": 16.9
+          },
+          {
+            "constructor": "Aston Martin",
+            "race1": 155,
+            "race2": 131,
+            "race3": 162,
+            "race4": 149,
+            "points": 149.25,
+            "points8races": 131,
+            "price": 20.9
+          },
+          {
+            "constructor": "Alfa Romeo",
+            "race1": 113,
+            "race2": 98,
+            "race3": 110,
+            "race4": 82,
+            "points": 100.75,
+            "points8races": 105,
+            "price": 12.3
+          },
+          {
+            "constructor": "McLaren",
+            "race1": 83,
+            "race2": 94,
+            "race3": 129,
+            "race4": 129,
+            "points": 108.75,
+            "points8races": 114,
+            "price": 16.4
+          },
+          {
+            "constructor": "Hass",
+            "race1": 103,
+            "race2": 118,
+            "race3": 114,
+            "race4": 91,
+            "points": 106.5,
+            "points8races": 101,
+            "price": 11.8
+          },
+          {
+            "constructor": "AlphaTauri",
+            "race1": 103,
+            "race2": 102,
+            "race3": 109,
+            "race4": 98,
+            "points": 103,
+            "points8races": 103,
+            "price": 10.1
+          },
+          {
+            "constructor": "Williams",
+            "race1": 111,
+            "race2": 79,
+            "race3": 90,
+            "race4": 102,
+            "points": 95.5,
+            "points8races": 91,
+            "price": 8.8
+          }
+         ]
 
-        req.session.myData.f1BudgetWithConstructor = 108.4
+        req.session.myData.f1BudgetWithConstructor = 111.718
+        // 112.6 real
+        // 111.718 with 3% penalty for dropping red bull
+
+
+        req.session.myData.selectedHaveToHaveDrivers = []
+        for (var a = 0; a < req.session.myData.drivers.length; a++) {
+          var _driver = req.session.myData.drivers[a]
+          if(_driver.haveToHave){
+            req.session.myData.selectedHaveToHaveDrivers.push(_driver.name)
+          }
+        }
+
+        req.session.myData.starDriver = true
 
         calculateBestTeam(req)
         
@@ -467,6 +701,9 @@ module.exports = function (router,_myData) {
     });
     router.post('/' + version + '/best-teams', function (req, res) {
 
+        //STAR DRIVER
+        req.session.myData.starDriver = (req.body.starDriver != "_unchecked")
+
         //BUDGET
         req.session.myData.f1BudgetWithConstructor = req.body.budget
 
@@ -474,6 +711,7 @@ module.exports = function (router,_myData) {
         req.session.myData.selectedDrivers = req.body.drivers
         for (var e = 0; e < req.session.myData.drivers.length; e++) {
             req.session.myData.drivers[e].available = false
+            req.session.myData.drivers[e].haveToHave = false
         }
         if(req.session.myData.selectedDrivers == "_unchecked"){
             //no available drivers!!
@@ -489,6 +727,27 @@ module.exports = function (router,_myData) {
                         _driver.available = true
                     }
                 }
+            }
+        }
+        req.session.myData.selectedHaveToHaveDrivers = []
+        if(req.body.haveToHaveDrivers == "_unchecked"){
+          //no have to have drivers!!
+        } else {
+            for (var d = 0; d < req.body.haveToHaveDrivers.length; d++) {
+                //for each selected checkbox
+                var _selectedDriver = req.body.haveToHaveDrivers[d]
+                req.session.myData.selectedHaveToHaveDrivers.push(_selectedDriver)
+                // req.session.myData.drivers
+                for (var e = 0; e < req.session.myData.drivers.length; e++) {
+                    //driver
+                    var _driver = req.session.myData.drivers[e]
+                    if(_selectedDriver == _driver.name){
+                        _driver.haveToHave = true
+                    }
+                }
+            }
+            if(req.session.myData.selectedHaveToHaveDrivers[0] == "_unchecked"){
+              req.session.myData.selectedHaveToHaveDrivers.shift()
             }
         }
 
